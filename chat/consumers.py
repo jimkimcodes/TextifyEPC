@@ -8,10 +8,16 @@ class ChatConsumer(WebsocketConsumer):
 
     def get_messages(self, data):
         messages = last_30_messages(data['chatID'])
-        content = {
-            'command': 'messages',
-            'messages': self.messages_to_json(messages)
-        }
+        if messages:
+            content = {
+                'command': 'messages',
+                'messages': self.messages_to_json(messages)
+            }
+        else:
+            content = {
+                'command': 'messages',
+                'messages': None
+            }
         self.send_message(content)
 
     def messages_to_json(self, messages):
@@ -55,6 +61,8 @@ class ChatConsumer(WebsocketConsumer):
                 'command': 'New_user_not_found',
             }
             return self.send_chat_message(content)
+
+        print(data)
 
         author_phone = data['from']
         author_user = User.objects.get(phone=author_phone)

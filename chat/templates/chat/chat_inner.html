@@ -51,6 +51,7 @@
 
     chatSocket.onmessage = function(e) {
         const data = JSON.parse(e.data);
+        console.log(data)
         if (data['command'] === 'messages') {
           for (let i=0; i<data['messages'].length; i++) {
             createMessage(data['messages'][i]);
