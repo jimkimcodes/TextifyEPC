@@ -52,6 +52,8 @@ Migrate and create new superuser(admin) by providing eMail and password using CL
 python manage.py migrate
 python manage.py createsuperuser
 ```
+Make sure that you have opened up your redis server. 
+
 That's it. Your local server is ready to run!
 ```
 python manage.py runserver
