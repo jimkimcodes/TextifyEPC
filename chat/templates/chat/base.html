@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>{% block title %}Textify{% endblock %}</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,500&display=swap" rel="stylesheet"> <!--Montserrat-->
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'chat/style.css' %}">
+</head>
+
+<body>
+  <div class="container main-container">
+    <div class="section">
+      <div class="row top-line"></div>
+      <div class="row">
+        <div class="col-10 col-md-11 py-3">
+          <h4 class="text-center text-md-left d-none d-md-block"><strong>Textify</strong> Because Text Messaging Rocks</h4>
+          <h4 class="text-center text-md-left d-block d-md-none"><strong>Textify</strong> - Texting Rocks</h4>
+        </div>
+        <div class="col-2 col-md-1 py-3">
+          <a href="{% url 'chat:logout' %}" class="d-none d-md-block">Logout</a>
+          <a href="{% url 'chat:logout' %}" class="d-block d-md-none"><h3><i class="fa fa-sign-out"></i></h3></a>
+        </div>
+      </div>
+    </div>  
+    {% block content %}{% endblock content %}
+    {% block afterbody %}{% endblock afterbody %}
+    <script src="{% static 'chat/reconnecting-websocket.min.js' %}"></script>
+  </div>
+  <div class="container mb-5">
+    <div class="row">
+      <div class="col">
+        <small>Textify, <a href="https://www.linkedin.com/in/eswar-prasad-clinton-a-a473441a7/">EswarClynn</a> © 2020</small>
+      </div>
+      <div class="col text-right">
+        <small>All text messaging on this site is kept 100% secure - <a href="">read our security policy.</a></small>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

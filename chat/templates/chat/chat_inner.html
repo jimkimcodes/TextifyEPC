@@ -1,0 +1,208 @@
+{% extends 'chat/room.html' %}
+
+{% block chat_inner %}
+
+<div class="wrapper px-2">
+    <div class="row pl-2 pl-md-2 py-3">
+        <span class="col-10 col-md-4"><h3>{{ chat.other_user.user.name }} - {{ chat.other_user.user.phone }}</h3> </span>
+        <span class="col-2 d-block d-md-none"><a href="{% url 'chat:all_conv' %}"><i class="fa fa-users mr-3"></i>All</a></span>
+        <span class="col-11 col-md-3 text-muted ml-md-1 mt-1"><a href="">Set a name for this number.</a></span>
+        <span class="col-11 col-md-4 text-muted text-right  mt-1 d-none d-md-block"><a href="{% url 'chat:all_conv' %}"><h5>View All conversations >></h5></a></span>
+    </div>
+    <div class="row">
+        <div class="container-fluid ">
+            <div class="row ml-2 mb-2 w-100"><span class="col-12"><strong>New Text Message</strong></span></div>
+            <div class="row ml-2">
+                <div class="col-11 col-md-10 ">
+                    <textarea name="message_content" id="chat-message-input"  class="form-control" required></textarea>
+                    <small><input type="file" id="chatImage" name="chatImage">Attach a photo to this text message.</a></small>
+                </div>
+                <div class="col-11 col-md-2">
+                    <buttton class="btn btn-primary w-100 py-3" type="submit" name="message_send" id="chat-message-submit" value="message_sending">Send Message</buttton>
+                </div>
+            </div>
+            <div class="container-fluid chatlist-container  mt-3 mb-4">
+                <div class="msg_history" id="msg_history">
+                </div>
+            </div>
+
+        </div>
+        </div>
+    </div>
+</div>
+
+{% load static %}
+<script src="{% static 'chat/reconnecting-websocket.min.js' %}"></script>
+<script>
+    const roomName = {{ room_name_json }};
+    const username = {{ username }};
+    
+    const chatSocket = new ReconnectingWebSocket(
+        'ws://'
+        + window.location.host
+        + '/ws/chat/'
+        + roomName
+        + '/'
+    );
+
+    chatSocket.onopen = function(e) {
+      fetchMessages();
+    }
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data['command'] === 'messages') {
+          for (let i=0; i<data['messages'].length; i++) {
+            createMessage(data['messages'][i]);
+          }
+        } else if (data['command'] === 'new_message'){
+          createPrependMessage(data['message']);
+        } else if (data['command'] === 'got_chat'){
+            document.querySelector('#msg_history').innerHTML='';
+            for (let i=0; i<data['messages'].length; i++) {
+                createMessage(data['messages'][i]);
+            }
+        } else if (data['command'] == 'New_user_not_found'){
+            alert('User with phone not found!')
+        }
+    };
+
+    chatSocket.onclose = function(e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+
+    document.querySelector('#chat-message-input').onkeyup = function(e) {
+        if (e.keyCode === 13) {  // enter, return
+            document.querySelector('#chat-message-submit').click();
+        }
+    };
+
+    document.querySelector('#chat-message-submit').onclick = function(e) {
+        const messageInputDom = document.querySelector('#chat-message-input');
+        const message = messageInputDom.value;
+        chatSocket.send(JSON.stringify({
+            'command': 'new_message',
+            'message': message,
+            'from': username,
+            'chatID': roomName,
+        }));
+        messageInputDom.value = '';
+    };
+
+//Handling message to New User 
+
+    document.querySelector('#toMessage').onkeyup = function(e) {
+        if (e.keyCode === 13) {  // enter, return
+            document.querySelector('#toSubmit').click();
+        }
+    };
+
+    document.querySelector('#toSubmit').onclick = function(e) {
+        const messageInputDom = document.querySelector('#toMessage');
+        const message = messageInputDom.value;
+        const toUser = document.querySelector('#toPhone').value;
+        chatSocket.send(JSON.stringify({
+            'command': 'to_new_user',
+            'message': message,
+            'from': username,
+            'to': toUser,
+        }));
+        messageInputDom.value = '';
+        document.querySelector('#toPhone').value = '';
+    };
+
+    function fetchMessages() {
+      chatSocket.send(JSON.stringify({'command': 'get_messages', 'chatID': roomName }));
+    }
+
+    function createPrependMessage(data) {
+      var author = data['author'];
+      var msgListTag = document.createElement('div');
+      var msgInnerTag = document.createElement('div');
+      var pTag = document.createElement('p');
+      var spanTag = document.createElement('span');
+
+      pTag.textContent = data.content;
+      var dateTime = getDisplayDate(new Date(data.timestamp));
+      spanTag.textContent = dateTime.time + ' | ' + dateTime.date;
+      spanTag.className= 'time_date';
+
+      if (author === username) {
+        msgListTag.className = 'outgoing_msg';
+        msgInnerTag.className = 'sent_msg';
+      } else {
+        msgListTag.className = 'received_msg';
+        msgInnerTag.className = 'received_withd_msg';
+      }
+      msgInnerTag.appendChild(spanTag);
+      msgInnerTag.appendChild(pTag);
+      msgListTag.appendChild(msgInnerTag);
+      $('#msg_history').prepend(msgListTag);
+    }
+
+    function createMessage(data) {
+      var author = data['author'];
+      var msgListTag = document.createElement('div');
+      var msgInnerTag = document.createElement('div');
+      var pTag = document.createElement('p');
+      var spanTag = document.createElement('span');
+
+      pTag.textContent = data.content;
+      var dateTime = getDisplayDate(new Date(data.timestamp));
+      spanTag.textContent = dateTime.time + ' | ' + dateTime.date;
+      spanTag.className= 'time_date';
+
+      if (author === username) {
+        msgListTag.className = 'outgoing_msg';
+        msgInnerTag.className = 'sent_msg';
+      } else {
+        msgListTag.className = 'received_msg';
+        msgInnerTag.className = 'received_withd_msg';
+      }
+      msgInnerTag.appendChild(spanTag);
+      msgInnerTag.appendChild(pTag);
+      msgListTag.appendChild(msgInnerTag);
+      document.querySelector('#msg_history').appendChild(msgListTag);
+    }
+
+    function getDisplayDate(date) {
+        today = new Date();
+        today.setHours(0);
+        today.setMinutes(0);
+        today.setSeconds(0);
+        today.setMilliseconds(0);
+        compDate = date; 
+        diff = compDate.getTime() - today.getTime(); 
+        Time = compDate.getHours()+':'+ ((compDate.getMinutes()<10) ? '0'+compDate.getMinutes() : compDate.getMinutes())
+        if (diff >= 0) {
+            return {
+                date: "Today", 
+                time: Time
+            };
+        } else if (diff < 0 && diff >= -(24 * 60 * 60 *1000)) {
+            return{
+                date: "Yesterday",
+                time: Time
+            };
+        } else { 
+            var dd = compDate.getDate();
+
+            var mm = compDate.getMonth()+1; 
+            var yyyy = compDate.getFullYear();
+            if(dd<10) {
+                dd='0'+dd;
+            } 
+
+            if(mm<10) {
+                mm='0'+mm;
+            } 
+            return {
+                date: dd+'-'+mm+'-'+yyyy,
+                time: Time
+            }
+        }
+    }
+</script>
+
+
+{% endblock chat_inner %}
